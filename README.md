@@ -12,8 +12,7 @@ The Web API utilized by the client is SignalR.
 
 -	**Installation process**
 
-	The source for this SPA is in a private Azure Git repository (no public acccess is available). 
-	So, there is no installation process. In order to develop/modify, academic instructor(s) need Visual Studio 2022, VS Code, or proficiency with the DotNet CLI. Developers must also have access to 
+	The source for this SPA is a public Git repository. So, there is no installation process. In order to develop/modify, academic instructor(s) need Visual Studio 2022, VS Code, or proficiency with the DotNet CLI. Developers must also have access to 
 	software dependencies and appropriate client keys from the respective API providers.
 
 -	**Software dependencies**
