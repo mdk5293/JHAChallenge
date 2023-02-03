@@ -1,0 +1,232 @@
+﻿@page "/twitter"
+
+@using System.Text.RegularExpressions;
+
+@using TwitterChallenge.Data
+@using TwitterChallenge.Models
+
+@using Telerik.DataSource;
+
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Spinner
+
+@inject Data.Twitter.TwitterService twitterService
+
+<h1>Twitter</h1>
+
+@if (GridData == null)
+{
+    <div class="spinner">Loading...</div>
+}
+else
+{
+    <p style="@messageStyles">@Message</p>
+
+    <div id="main">
+    <TelerikTabStrip @bind-ActiveTabIndex="@ActiveTabIndex">
+        <TabStripTab Title="Recent">
+            <p>Click Get Tweets button to retrieve a sample of 50 recent tweets</p>
+
+            <div>
+                <table>
+                    <tr>
+                        <td style="text-align:center" valign="bottom">
+                            <TelerikButton OnClick="@GetTwitter" Primary="true">Get Tweets</TelerikButton>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <div id="container">
+                    <TelerikGrid Data=@GridData
+                             @ref="@Grid"
+                             Pageable="true"
+                             Groupable="true"
+                             Sortable="true"
+                             FilterMode="GridFilterMode.FilterMenu"
+                             Resizable="true"
+                             Reorderable="true"
+                             EditMode="GridEditMode.Popup"
+                             SelectionMode="GridSelectionMode.Multiple"
+                             PageSize="5"
+                             Navigable="true">
+                        <GridColumns>
+                            <GridColumn Field="@nameof(TwitterBindingModel.Author_id)"  Title="AuthorId" />
+                            <GridColumn Field="@nameof(TwitterBindingModel.Created_at)" Title="CreatedAt" />
+                            @*
+                            <GridColumn Field="@nameof(TwitterBindingModel.Edit_history_tweet_ids)" Title="HistoryIds">
+                                <Template Context="hist">
+                                    @{
+                                    <TelerikComboBox ValueField="Edit_history_tweet_ids" Data="hist" TextField="@nameof(TwitterBindingModel.Edit_history_tweet_ids)" Id="HistoryIds">
+                                    </TelerikComboBox>
+                                    }
+                                </Template>
+                            </GridColumn>
+                            *@
+                            <GridColumn Field="@nameof(TwitterBindingModel.Id)"   Title="Id" />
+                            <GridColumn Field="@nameof(TwitterBindingModel.Text)" Title="Text" />
+                        </GridColumns>
+                    </TelerikGrid>
+                </div>
+
+                @*Spinner control from SyncFusion. Uses a Community license so it shouldn't display a trial message and won't expire*@
+                <SfSpinner @ref="SpinnerObj" Target="#container" />
+            </div>
+        </TabStripTab>
+
+        <TabStripTab Title="Trending">
+            <p>Click Get Trending to retrieve trending hastags</p>
+
+            <div>
+                <table>
+                    <tr>
+                        <td style="text-align:center" valign="bottom">
+                            <TelerikButton OnClick="@GetTrends" Primary="true">Get Trending</TelerikButton>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <table>
+                    <tr>
+                        <td style="text-align:center" valign="bottom">
+                            <label>Number of Tweets Received</label>
+                            <TelerikTextBox Value="@GridData2?.Count.ToString()"></TelerikTextBox>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <div id="container2">
+                    <TelerikGrid Data=@GridData2
+                                @ref="@Grid2"
+                                Pageable="true"
+                                Groupable="true"
+                                Sortable="true"
+                                FilterMode="GridFilterMode.FilterMenu"
+                                Resizable="true"
+                                Reorderable="true"
+                                EditMode="GridEditMode.Popup"
+                                SelectionMode="GridSelectionMode.Multiple"
+                                PageSize="5"
+                                Navigable="true">
+                        <GridColumns>
+                            <GridColumn Field="@nameof(TrendingBindingModel.Name)"            Title="Name" />
+                            <GridColumn Field="@nameof(TrendingBindingModel.Url)"             Title="Url" />
+                            <GridColumn Field="@nameof(TrendingBindingModel.PromotedContent)" Title="PromotedContent" />
+                            <GridColumn Field="@nameof(TrendingBindingModel.Query)"           Title="Query" />
+                            <GridColumn Field="@nameof(TrendingBindingModel.TweetVolume)"     Title="TweetVolume" />
+                        </GridColumns>
+                    </TelerikGrid>
+                </div>
+
+                <SfSpinner @ref="SpinnerObj" Target="#container2" />
+            </div>
+        </TabStripTab>
+    </TelerikTabStrip>
+
+    </div>
+
+}
+
+@code
+{
+    SfSpinner    SpinnerObj;
+    MarkupString Message;
+    string       messageStyles = "color:black";
+
+    public  int                              ActiveTabIndex { get; set; } = 0;
+    public  List<TwitterBindingModel>        GridData       { get; set; }
+    public  TelerikGrid<TwitterBindingModel> Grid           { get; set; }
+    public  List<TrendingBindingModel>       GridData2      { get; set; }
+    public TelerikGrid<TrendingBindingModel> Grid2          { get; set; }
+    private string                           Target         { get; set; } = "#container";
+    private string                           Target2        { get; set; } = "#container2";
+
+    //Async method handles OnItitialized event
+    protected override async Task OnInitializedAsync()
+    {
+        GridData = new List<TwitterBindingModel>();
+    }
+
+    //Do not format the grid with initial default grouping (this isn't being called)
+    private void OnStateInit(GridStateEventArgs<TwitterBindingModel> args)
+    {
+        args.GridState.GroupDescriptors = new List<GroupDescriptor>()
+        {
+            new GroupDescriptor()
+            {
+                Member                  = nameof(TwitterBindingModel.Id),
+                MemberType              = typeof(string)
+            }
+        };
+    }
+
+    //Retrieve tweets info fromn API
+    protected async void GetTwitter()
+    {
+        try
+        {
+            SpinnerObj.ShowSpinner(Target);
+            messageStyles       = "color:black";
+            Message             = new MarkupString("Processing...");
+
+            GridData            = await twitterService.GetTwitterAsync();
+
+            if (GridData.Count == 0)
+            {
+                messageStyles   = "color:red";
+                Message         = new MarkupString("No tweets found");
+            }
+            else
+            {
+                messageStyles   = "color:black";
+                Message         = new MarkupString();
+            }
+        }
+        catch (Exception ex)
+        {
+            //This exception may have been thrown in the Service or Model. It is caught here for display to the user
+            messageStyles       = "color:red";
+            Message             = new MarkupString("An error occurred: " + ex.Message);
+        }
+        finally
+        {
+            SpinnerObj.HideSpinner(Target);
+        }
+    }
+
+    //Retrieve tweets info fromn API
+    protected async void GetTrends()
+    {
+        try
+        {
+            SpinnerObj.ShowSpinner(Target2);
+            messageStyles        = "color:black";
+            Message              = new MarkupString("Processing...");
+
+            GridData2            = await twitterService.GetTrendingAsync();
+
+            if (GridData2.Count == 0)
+            {
+                messageStyles    = "color:red";
+                Message          = new MarkupString("No tweets found");
+            }
+            else
+            {
+                messageStyles    = "color:black";
+                Message          = new MarkupString();
+            }
+        }
+        catch (Exception ex)
+        {
+            //This exception may have been thrown in the Service or Model. It is caught here for display to the user
+            messageStyles = "color:red";
+            Message = new MarkupString("An error occurred: " + ex.Message);
+        }
+        finally
+        {
+            SpinnerObj.HideSpinner(Target2);
+        }
+    }
+}
