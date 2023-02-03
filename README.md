@@ -21,7 +21,7 @@ The Web API utilized by the client is SignalR.
 	
 	It also uses Telerik grid Controls for Blazor. A trial key will suffice but serves a trial message at runtime.
 
-	This SPA also uses the SyncFusion Spinner control for wait scenarios as data is retrieved. This is using a community license made available or students.
+	This SPA also uses the SyncFusion Spinner control for wait scenarios as data is retrieved. This is using a community license made available for students/learners.
 
 -	**Latest releases**
 
