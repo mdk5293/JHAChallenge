@@ -1,6 +1,6 @@
 # Introduction 
 
-This application is submitted as a JHA Coding CHallenge. It was written and submitted by Mark Kennedy in February 2023
+This application is submitted as a JHA Coding Challenge. It was written and submitted by Mark Kennedy in February 2023
 The course instructor is Professor Robert Rodini.
 
 This single page application (SPA) is written in ASP.NET Core Blazor with C#. It was built with Visual Studio 2022 and .NET 6.
